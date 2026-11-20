@@ -1,0 +1,107 @@
+name: Deploy to Cloudflare Workers
+
+# main への push と、手動・blog のデプロイからの呼び出しで動く。
+# 毎日の cron は置かない。「最近書いたもの」が変わるのは blog をデプロイしたときだけで、そのときは blog のワークフローがこれを呼ぶ。
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 2本のデプロイを競走させない。途中で切ると Worker が中途半端に残り得るので、走っているものは殺さず待つ。
+concurrency:
+  group: ara-homepage-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # workflow_dispatch は任意の ref を受け付けるので、main 以外を本番に出さない。
+    # DEPLOY_ENABLED は、Worker の入れ物と secrets が揃うまでデプロイを止めておくための repository variable。
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    env:
+      HAS_DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run typecheck
+      - run: npm test
+
+      # テストは dist-test/ にビルドするので、本番の dist/ はここで明示的にビルドする。
+      - name: Build
+        env:
+          PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
+        run: npm run build
+
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
+
+      # ペイロードは ${{ }} をシェルに展開させず、env 経由で jq に渡して組む。shell: bash は pipefail で動くので、jq の失敗が step の失敗になる。
+      - name: Notify Discord on success
+        if: success() && env.HAS_DISCORD_WEBHOOK == 'true'
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          COMMIT_SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        shell: bash
+        run: |
+          count=$(jq -r '.count' writing-report.json)
+          reason=$(jq -r '.reason // "不明"' writing-report.json)
+          jq -n \
+            --arg sha "$COMMIT_SHA" \
+            --arg actor "$ACTOR" \
+            --argjson count "$count" \
+            --arg reason "$reason" \
+            '{
+              embeds: [{
+                title: (if $count > 0 then "Site Deploy Successful" else "Site Deployed (writing list is empty)" end),
+                description: "joifup.com has been deployed.",
+                color: (if $count > 0 then 5763719 else 16098851 end),
+                fields: ([
+                  {name: "Commit", value: $sha, inline: true},
+                  {name: "Triggered by", value: $actor, inline: true},
+                  {name: "最近書いたもの", value: "\($count) 件", inline: true}
+                ] + (if $count > 0 then [] else [{name: "理由", value: $reason, inline: false}] end))
+              }]
+            }' \
+            | curl -sS --fail-with-body -X POST "$DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" --data @-
+
+      - name: Notify Discord on failure
+        if: failure() && env.HAS_DISCORD_WEBHOOK == 'true'
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          jq -n \
+            --arg sha "$COMMIT_SHA" \
+            --arg run_url "$RUN_URL" \
+            '{
+              embeds: [{
+                title: "Site Deploy Failed",
+                description: "joifup.com deployment failed.",
+                color: 15158332,
+                fields: [
+                  {name: "Commit", value: $sha, inline: true},
+                  {name: "Workflow", value: "[View logs](\($run_url))", inline: false}
+                ]
+              }]
+            }' \
+            | curl -sS --fail-with-body -X POST "$DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" --data @-
