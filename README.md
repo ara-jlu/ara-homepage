@@ -23,3 +23,7 @@ Turnstile は、手元では Cloudflare のテスト用の鍵（site key `1x0000
 ## デプロイ
 
 main への push と、手動の実行、blog のデプロイからの呼び出しで、GitHub Actions がデプロイする。repository variable `DEPLOY_ENABLED` が `true` のときだけ動く。Worker の入れ物とカスタムドメインは `infra/` の Terraform が持つ。
+
+デプロイの設定は次のように置く。
+- repository variable: `DEPLOY_ENABLED`。job の `if:` は environment に入る前に評価されるので、environment の variable は見えない。repository variable に置く。
+- `production` environment（デプロイできるブランチを main だけに限る）: secrets の `CLOUDFLARE_API_TOKEN`・`CLOUDFLARE_ACCOUNT_ID`・`DISCORD_WEBHOOK_URL` と、variable の `PUBLIC_TURNSTILE_SITE_KEY`。

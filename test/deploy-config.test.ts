@@ -45,6 +45,16 @@ describe("デプロイのワークフロー", () => {
     expect(deploy).toContain("if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'");
   });
 
+  it("deploy ジョブは production environment に結び、secrets を main だけから読めるようにする", () => {
+    expect(deploy).toMatch(/^\s+environment:\s*production\s*$/m);
+  });
+
+  it("成功の通知は報告のファイルが無くても落ちず、メンションを飛ばさない", () => {
+    expect(deploy).toContain("allowed_mentions");
+    expect(deploy).toMatch(/\.count \/\/ 0/);
+    expect(deploy).not.toMatch(/jq -r '\.count' writing-report\.json\)/);
+  });
+
   it("権限を絞り、資格情報を残さず、同時に2本走らせない", () => {
     expect(deploy).toContain("contents: read");
     expect(deploy).toContain("persist-credentials: false");
