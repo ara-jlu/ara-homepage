@@ -25,7 +25,7 @@ afterAll(async () => {
 });
 
 // 外の通信（書体・Turnstile）は止めて、テストを手元だけで完結させる。
-async function open(opts: { js?: boolean; reduce?: boolean; blockMain?: boolean; width?: number; path?: string } = {}): Promise<Page> {
+async function open(opts: { js?: boolean; reduce?: boolean; blockMain?: boolean; width?: number; path?: string; before?: (page: Page) => Promise<unknown> } = {}): Promise<Page> {
   const ctx = await browser.newContext({
     javaScriptEnabled: opts.js ?? true,
     reducedMotion: opts.reduce ? "reduce" : "no-preference",
@@ -36,6 +36,7 @@ async function open(opts: { js?: boolean; reduce?: boolean; blockMain?: boolean;
   page.on("pageerror", (e) => errors.push(e));
   await page.route(/^https:\/\//, (r) => r.abort());
   if (opts.blockMain) await page.route(/\/_astro\/.*\.js$/, (r) => r.fulfill({ status: 404, body: "" }));
+  await opts.before?.(page);
   await page.goto(site.url + (opts.path ?? "/"));
   return page;
 }
@@ -90,6 +91,48 @@ describe("JS が動くとき", () => {
     expect(await visible(page, "#headline")).toBe(true);
     expect(await page.$eval("#headline", (el) => el.textContent)).toBe("人生を楽しみ、一歩上へ。");
     expect(await page.$$eval("#screen > .ln", (els) => els.length)).toBe(9);
+  });
+
+  it("窓が開いてから、打ち込み終わった後の静的な行が一度に見えることは無い", async () => {
+    // 窓の .pre が外れた後の毎フレームで、打ち終わる前に #screen に9行が揃っていないかを記録する
+    const page = await open({
+      before: (p) =>
+        p.addInitScript(() => {
+          const w = window as unknown as { __flash: number; __popped: boolean };
+          w.__flash = 0;
+          w.__popped = false;
+          const tick = () => {
+            const win = document.getElementById("win");
+            const screen = document.getElementById("screen");
+            if (win && screen && !win.classList.contains("pre")) {
+              w.__popped = true;
+              if (!("typed" in screen.dataset) && screen.querySelectorAll(":scope > .ln").length === 9) w.__flash++;
+            }
+            if (!screen || !("typed" in screen.dataset)) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        }),
+    });
+    await page.waitForSelector("#screen[data-typed]", { timeout: 20_000 });
+    expect(await page.evaluate(() => (window as unknown as { __popped: boolean }).__popped)).toBe(true);
+    expect(await page.evaluate(() => (window as unknown as { __flash: number }).__flash)).toBe(0);
+  });
+
+  it("演出が途中で失敗しても、幕や透明な窓のまま止まらない", async () => {
+    // 窓を開く演出（Element.animate）を失敗させる
+    const page = await open({
+      before: (p) =>
+        p.addInitScript(() => {
+          Element.prototype.animate = () => {
+            throw new Error("animate failed");
+          };
+        }),
+    });
+    // js-flag.js の4秒の戻しより前に、本体の側で片付くこと
+    await page.waitForFunction(() => !document.getElementById("win")!.classList.contains("pre"), null, { timeout: 3800 });
+    expect(await page.evaluate(() => document.body.classList.contains("loading"))).toBe(false);
+    expect(await page.$("#boot")).toBeNull();
+    expect(await page.evaluate(() => document.documentElement.classList.contains("js"))).toBe(true);
   });
 
   it("流れる帯は JS が中身を複製して流す", async () => {
