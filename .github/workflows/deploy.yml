@@ -1,7 +1,7 @@
 name: Deploy to Cloudflare Workers
 
-# main への push と、手動・blog のデプロイからの呼び出しで動く。
-# 毎日の cron は置かない。「最近書いたもの」が変わるのは blog をデプロイしたときだけで、そのときは blog のワークフローがこれを呼ぶ。
+# main への push と、手動の実行（workflow_dispatch）で動く。ブログのリポジトリのデプロイのワークフローも、記事を公開した後に同じ手動の実行を起動する。
+# 毎日の cron は置かない。「最近書いたもの」が変わるのはブログをデプロイしたときだけで、そのときはブログの側がこれを起動する。
 on:
   push:
     branches: [main]
