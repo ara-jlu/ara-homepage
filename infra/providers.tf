@@ -1,5 +1,5 @@
 terraform {
-  # 1.3 以上: lifecycle の precondition と endswith() を使うため。
+  # lifecycle の precondition は 1.2 から使える。1.3 は余裕を持たせた下限で、機能の要請ではない。
   required_version = ">= 1.3"
 
   required_providers {
