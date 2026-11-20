@@ -1,0 +1,25 @@
+---
+import { loadWriting } from "../lib/writing-feed";
+const { items } = await loadWriting();
+---
+<section id="writing" data-theme="light">
+  <div class="wrap">
+    <div class="shead reveal">
+      <span class="prompt"><b>$</b> tail -n 3 writing.log</span>
+      <h2><span class="en">02 — WRITING</span><span class="mask"><span>最近書いたもの</span></span></h2>
+    </div>
+    <p class="wlead reveal">ブログや X、Zenn で、調べたことや作ったものについて書いています。</p>
+    {items.length > 0 && (
+      <div class="log reveal d1">
+        {items.map((item) => (
+          <a href={item.url} target="_blank" rel="noopener" data-hot><time>{item.date}</time><span class="src">blog</span><span class="tt">{item.title}</span><span class="ar">→</span></a>
+        ))}
+      </div>
+    )}
+    <div class="more reveal d2">
+      <a class="btn magnet" href="https://x.com/ara_jlu" target="_blank" rel="noopener" data-hot><span>X @ara_jlu →</span></a>
+      <a class="btn magnet" href="https://blog.joifup.com" target="_blank" rel="noopener" data-hot><span>blog.joifup.com →</span></a>
+      <a class="btn magnet" href="https://zenn.dev/ara_jlu" target="_blank" rel="noopener" data-hot><span>Zenn →</span></a>
+    </div>
+  </div>
+</section>
