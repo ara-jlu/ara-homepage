@@ -5,4 +5,6 @@ export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; frame-src https://challenges.cloudflare.com; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
+  // joifup.com のゾーンには別のサービスのサブドメインもあるので、includeSubDomains と preload は付けない（そちらの HTTPS の都合を縛らない）
+  "Strict-Transport-Security": "max-age=31536000",
 };
