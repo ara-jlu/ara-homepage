@@ -15,8 +15,15 @@ const TYPES: Record<string, string> = {
 /** dir を配る小さな静的なサーバー。"/" は index.html、拡張子の無いパスは .html を探す。 */
 export async function serveDir(dir: string): Promise<{ url: string; close(): Promise<void> }> {
   const server = createServer(async (req, res) => {
-    const path = decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname);
-    const rel = normalize(path === "/" ? "/index.html" : extname(path) ? path : `${path}.html`);
+    let rel: string;
+    try {
+      const path = decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname);
+      rel = normalize(path === "/" ? "/index.html" : extname(path) ? path : `${path}.html`);
+    } catch {
+      // 壊れたパーセントの符号は、例外でサーバーを落とさず 400 を返す
+      res.writeHead(400).end();
+      return;
+    }
     try {
       const body = await readFile(join(dir, rel));
       res.writeHead(200, { "Content-Type": TYPES[extname(rel)] ?? "application/octet-stream" });
