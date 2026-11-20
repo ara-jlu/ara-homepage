@@ -1,0 +1,6 @@
+# このファイルを terraform.tfvars にコピーして値を入れる（terraform.tfvars はコミットしない）。
+# トークンの権限: Account の Workers Scripts の編集と、ゾーンの読み取り。
+cloudflare_api_token  = "REPLACE_ME"
+cloudflare_account_id = "REPLACE_ME"
+# apex の既存のレコードを外した後にだけ true にする。
+attach_custom_domain = false

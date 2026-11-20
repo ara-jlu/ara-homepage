@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ara-homepage",
+  "compatibility_date": "2026-11-20",
+  // /api/contact を受ける Worker。静的なアセットの配信は Worker を通さない（通すと _headers が付かなくなる）。
+  "main": "worker/index.ts",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
+  },
+  // observability は wrangler が deploy のたびに書き直すので、ここと infra/main.tf に同じ値を書く（食い違うと terraform plan に差分が出続ける）。
+  // invocation log はリクエストの詳細（IP を含みうる）を残すので止める。
+  "observability": { "enabled": true, "head_sampling_rate": 1, "logs": { "invocation_logs": false } },
+  // 正規のホストを joifup.com の1つにする。wrangler は workers_dev を書かないと既定で有効にするので、明示して閉じる。
+  "workers_dev": false,
+  "preview_urls": false
+}
