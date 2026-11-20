@@ -10,7 +10,7 @@ import About from "../components/About.astro";
 import Contact from "../components/Contact.astro";
 import Footer from "../components/Footer.astro";
 ---
-<Base>
+<Base interactive>
   <Boot />
   <Nav />
   <Hero />
@@ -20,4 +20,7 @@ import Footer from "../components/Footer.astro";
   <About />
   <Contact />
   <Footer />
+  <script>
+    import "../scripts/main.ts";
+  </script>
 </Base>
