@@ -41,6 +41,8 @@ async function open(opts: { js?: boolean; reduce?: boolean; blockMain?: boolean;
   return page;
 }
 
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 const visible = (page: Page, sel: string) =>
   page.$eval(sel, (el) => {
     const s = getComputedStyle(el);
@@ -75,6 +77,27 @@ describe("JS が無い・失敗したとき", () => {
     const page = await open({ blockMain: true });
     await page.waitForFunction(() => !document.documentElement.classList.contains("js"), null, { timeout: 8000 });
     await readable(page);
+  });
+
+  it("本体のスクリプトが4秒の戻しより後に動いても、縦に積んだ WORKS が後ろの節に重ならず、ヒーローは静的なまま", async () => {
+    const page = await open({ before: (p) => p.route(/\/_astro\/.*\.js$/, (r) => delay(4500).then(() => r.continue())) });
+    await page.waitForFunction(() => document.documentElement.hasAttribute("data-ready"), null, { timeout: 10_000 });
+    expect(await page.evaluate(() => document.documentElement.classList.contains("js"))).toBe(false);
+    // 本体の中で遅れて走る処理（高さの測り直しや打鍵の開始）を待つ
+    await page.waitForTimeout(1000);
+    const lastBottom = await page.$eval("#htrack > .panel:last-child", (el) => el.getBoundingClientRect().bottom);
+    const writingTop = await page.$eval("#writing", (el) => el.getBoundingClientRect().top);
+    expect(writingTop).toBeGreaterThanOrEqual(lastBottom);
+    expect(await page.$$eval("#screen > .ln", (els) => els.length)).toBe(9);
+    expect(await visible(page, "#headline")).toBe(true);
+    await readable(page);
+  });
+
+  it("本体のスクリプトが3秒を過ぎて動き始めても、幕は CSS の止めで途中で切られない", async () => {
+    const page = await open({ before: (p) => p.route(/\/_astro\/.*\.js$/, (r) => delay(2500).then(() => r.continue())) });
+    await page.waitForFunction(() => document.documentElement.hasAttribute("data-ready"), null, { timeout: 10_000 });
+    await page.waitForFunction(() => performance.now() > 3400);
+    expect(await page.$eval("#boot", (el) => getComputedStyle(el).visibility)).toBe("visible");
   });
 });
 

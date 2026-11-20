@@ -378,6 +378,6 @@ html:not(.js) .hpin{position:relative;height:auto;padding:110px 0}
 html:not(.js) .htrack{flex-direction:column;transform:none!important}
 html:not(.js) .panel{flex-basis:auto;grid-template-columns:1fr}
 html:not(.js) .hbar,html:not(.js) .hcount{display:none}
-/* 幕が出たまま止まらないよう、3秒たったら CSS だけで必ず消す */
-html.js #boot{animation:boot-failsafe 0s linear 3s forwards}
+/* 幕が出たまま止まらないよう、本体が起動しないまま3秒たったら CSS だけで必ず消す（起動した後の幕は本体が上げる。遅れて起動した幕を途中で切らない） */
+html.js:not([data-ready]) #boot{animation:boot-failsafe 0s linear 3s forwards}
 @keyframes boot-failsafe{to{visibility:hidden;pointer-events:none}}
