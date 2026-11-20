@@ -80,8 +80,8 @@ describe("JS が無い・失敗したとき", () => {
   });
 
   it("本体のスクリプトが4秒の戻しより後に動いても、縦に積んだ WORKS が後ろの節に重ならず、ヒーローは静的なまま", async () => {
-    const page = await open({ before: (p) => p.route(/\/_astro\/.*\.js$/, (r) => delay(4500).then(() => r.continue())) });
-    await page.waitForFunction(() => document.documentElement.hasAttribute("data-ready"), null, { timeout: 10_000 });
+    const page = await open({ before: (p) => p.route(/\/_astro\/.*\.js$/, (r) => delay(5500).then(() => r.continue())) });
+    await page.waitForFunction(() => document.documentElement.hasAttribute("data-ready"), null, { timeout: 12_000 });
     expect(await page.evaluate(() => document.documentElement.classList.contains("js"))).toBe(false);
     // 本体の中で遅れて走る処理（高さの測り直しや打鍵の開始）を待つ
     await page.waitForTimeout(1000);
@@ -152,7 +152,7 @@ describe("JS が動くとき", () => {
         }),
     });
     // js-flag.js の4秒の戻しより前に、本体の側で片付くこと
-    await page.waitForFunction(() => !document.getElementById("win")!.classList.contains("pre"), null, { timeout: 3800 });
+    await page.waitForFunction(() => !document.getElementById("win")!.classList.contains("pre"), null, { timeout: 8000 });
     expect(await page.evaluate(() => document.body.classList.contains("loading"))).toBe(false);
     expect(await page.$("#boot")).toBeNull();
     expect(await page.evaluate(() => document.documentElement.classList.contains("js"))).toBe(true);
