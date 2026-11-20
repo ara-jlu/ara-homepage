@@ -44,10 +44,14 @@ jobs:
       - run: npm test
 
       # テストは dist-test/ にビルドするので、本番の dist/ はここで明示的にビルドする。
+      # site key が空だと Turnstile が出ず、問い合わせを誰も送れないサイトになるので、ビルドの前に止める。
       - name: Build
         env:
           PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
-        run: npm run build
+        shell: bash
+        run: |
+          test -n "$PUBLIC_TURNSTILE_SITE_KEY" || { echo "::error::PUBLIC_TURNSTILE_SITE_KEY is empty"; exit 1; }
+          npm run build
 
       - name: Deploy
         env:
