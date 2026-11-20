@@ -141,8 +141,25 @@ describe("モックとの突き合わせ", () => {
 });
 
 describe("404", () => {
+  const page = parse(read("dist-test/404.html"));
+
   it("トップへのリンクがある", () => {
-    const page = parse(read("dist-test/404.html"));
     expect(page.querySelector('a[href="/"]')).not.toBeNull();
+  });
+
+  it("src の無い script とインラインのイベントハンドラが無い", () => {
+    for (const s of page.querySelectorAll("script")) expect(s.getAttribute("src")).toBeTruthy();
+    expect(read("dist-test/404.html")).not.toMatch(/\son[a-z]+\s*=/i);
+  });
+
+  it("本体のスクリプトと読み込みの幕を持たない", () => {
+    expect(page.querySelectorAll("script")).toHaveLength(0);
+    expect(page.querySelector("body")!.classList.contains("loading")).toBe(false);
+  });
+
+  it("検索に載せず、canonical と og:url を持たない", () => {
+    expect(page.querySelector('meta[name="robots"]')?.getAttribute("content")).toBe("noindex");
+    expect(page.querySelector('link[rel="canonical"]')).toBeNull();
+    expect(page.querySelector('meta[property="og:url"]')).toBeNull();
   });
 });

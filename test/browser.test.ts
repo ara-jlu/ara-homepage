@@ -8,6 +8,8 @@ let browser: Browser;
 let site: { url: string; close(): Promise<void> };
 // テストごとに開いたコンテキストは、そのテストの後に閉じる（次のテストへ持ち越さない）。
 const contexts: BrowserContext[] = [];
+// ページの中で投げられた例外（pageerror）を集める。テストごとに空にする。
+const errors: Error[] = [];
 
 beforeAll(async () => {
   browser = await chromium.launch();
@@ -15,6 +17,7 @@ beforeAll(async () => {
 });
 afterEach(async () => {
   await Promise.all(contexts.splice(0).map((c) => c.close()));
+  errors.length = 0;
 });
 afterAll(async () => {
   await browser.close();
@@ -22,7 +25,7 @@ afterAll(async () => {
 });
 
 // 外の通信（書体・Turnstile）は止めて、テストを手元だけで完結させる。
-async function open(opts: { js?: boolean; reduce?: boolean; blockMain?: boolean; width?: number } = {}): Promise<Page> {
+async function open(opts: { js?: boolean; reduce?: boolean; blockMain?: boolean; width?: number; path?: string } = {}): Promise<Page> {
   const ctx = await browser.newContext({
     javaScriptEnabled: opts.js ?? true,
     reducedMotion: opts.reduce ? "reduce" : "no-preference",
@@ -30,9 +33,10 @@ async function open(opts: { js?: boolean; reduce?: boolean; blockMain?: boolean;
   });
   contexts.push(ctx);
   const page = await ctx.newPage();
+  page.on("pageerror", (e) => errors.push(e));
   await page.route(/^https:\/\//, (r) => r.abort());
   if (opts.blockMain) await page.route(/\/_astro\/.*\.js$/, (r) => r.fulfill({ status: 404, body: "" }));
-  await page.goto(site.url + "/");
+  await page.goto(site.url + (opts.path ?? "/"));
   return page;
 }
 
@@ -104,6 +108,16 @@ describe("動きを減らす設定", () => {
       expect(await page.$$eval(sel, (els) => els.every((e) => getComputedStyle(e).opacity === "1"))).toBe(true);
     }
     expect(await visible(page, "#headline")).toBe(true);
+  });
+});
+
+describe("404", () => {
+  it("例外を投げず、読み込みの幕もスクロールの止めも無い", async () => {
+    const page = await open({ path: "/404" });
+    await page.waitForTimeout(300);
+    expect(errors.map((e) => e.message)).toEqual([]);
+    expect(await page.evaluate(() => document.body.classList.contains("loading"))).toBe(false);
+    expect(await page.evaluate(() => getComputedStyle(document.body).overflow)).not.toBe("hidden");
   });
 });
 
