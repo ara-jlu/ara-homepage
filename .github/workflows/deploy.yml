@@ -20,7 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     # workflow_dispatch は任意の ref を受け付けるので、main 以外を本番に出さない。
     # DEPLOY_ENABLED は、Worker の入れ物と secrets が揃うまでデプロイを止めておくための repository variable。
+    # DEPLOY_ENABLED は job の if で評価され、environment に入る前なので、environment の variable は見えない。repository variable に置く。
     if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    # deploy の secrets は production environment に置き、その environment は main ブランチだけに限る。
+    environment: production
     env:
       HAS_DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL != '' }}
     steps:
@@ -61,14 +64,17 @@ jobs:
           ACTOR: ${{ github.actor }}
         shell: bash
         run: |
-          count=$(jq -r '.count' writing-report.json)
-          reason=$(jq -r '.reason // "不明"' writing-report.json)
+          # 報告のファイルが無い・壊れていても、成功したデプロイを失敗の扱いにしない。既定値で読む。
+          count=$(jq -r '.count // 0' writing-report.json 2>/dev/null || echo 0)
+          case "$count" in ''|*[!0-9]*) count=0 ;; esac
+          reason=$(jq -r '(.reason // "") | if . == "" then "不明" else . end' writing-report.json 2>/dev/null || echo "報告のファイルが無い")
           jq -n \
             --arg sha "$COMMIT_SHA" \
             --arg actor "$ACTOR" \
             --argjson count "$count" \
             --arg reason "$reason" \
             '{
+              allowed_mentions: {parse: []},
               embeds: [{
                 title: (if $count > 0 then "Site Deploy Successful" else "Site Deployed (writing list is empty)" end),
                 description: "joifup.com has been deployed.",
@@ -94,6 +100,7 @@ jobs:
             --arg sha "$COMMIT_SHA" \
             --arg run_url "$RUN_URL" \
             '{
+              allowed_mentions: {parse: []},
               embeds: [{
                 title: "Site Deploy Failed",
                 description: "joifup.com deployment failed.",
