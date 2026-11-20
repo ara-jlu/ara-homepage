@@ -23,6 +23,14 @@ describe("parseFeed", () => {
 
   it("3件未満ならあるだけ返す、0件なら空", () => {
     expect(parseFeed(rss(""))).toEqual([]);
+    const xml = rss(
+      item("古い", "https://blog.joifup.com/old", "Tue, 10 Nov 2026 00:00:00 +0900") +
+        item("新しい", "https://blog.joifup.com/new", "Tue, 17 Nov 2026 00:00:00 +0900"),
+    );
+    expect(parseFeed(xml)).toEqual([
+      { title: "新しい", url: "https://blog.joifup.com/new", date: "2026-11-17" },
+      { title: "古い", url: "https://blog.joifup.com/old", date: "2026-11-10" },
+    ]);
   });
 
   it("題・URL・日付のどれかが欠けた項目、日付が読めない項目は捨てる", () => {
@@ -39,6 +47,11 @@ describe("parseFeed", () => {
     expect(parseFeed(xml)).toEqual([]);
   });
 
+  it("資格情報つきの URL を捨てる", () => {
+    const xml = rss(item("偽", "https://user:pw@blog.joifup.com/x", "Tue, 17 Nov 2026 00:00:00 +0900"));
+    expect(parseFeed(xml)).toEqual([]);
+  });
+
   it("壊れた XML は invalid xml を投げる", () => {
     expect(() => parseFeed("<rss><channel><item>")).toThrow("invalid xml");
   });
@@ -51,7 +64,10 @@ describe("parseFeed", () => {
 
 describe("loadWriting", () => {
   const report = () => join(mkdtempSync(join(tmpdir(), "wf-")), "report.json");
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
 
   it("取れたら項目を返し、件数を報告に書く", async () => {
     vi.stubGlobal("fetch", async () => new Response(FEED, { status: 200 }));
@@ -73,5 +89,32 @@ describe("loadWriting", () => {
     const result = await loadWriting({ url: "https://feed.test/rss.xml", reportPath: path });
     expect(result).toEqual({ items: [], reason });
     expect(JSON.parse(readFileSync(path, "utf8"))).toEqual({ count: 0, reason });
+  });
+
+  it("本文の読み取りが失敗したら fetch failed", async () => {
+    const body = new ReadableStream({ start: (c) => c.error(new Error("boom")) });
+    vi.stubGlobal("fetch", async () => new Response(body, { status: 200 }));
+    const result = await loadWriting({ url: "https://feed.test/rss.xml", reportPath: report() });
+    expect(result).toEqual({ items: [], reason: "fetch failed" });
+  });
+
+  it("上限を超える本文は too large", async () => {
+    vi.stubGlobal("fetch", async () => new Response("x".repeat(1_048_577), { status: 200 }));
+    const result = await loadWriting({ url: "https://feed.test/rss.xml", reportPath: report() });
+    expect(result).toEqual({ items: [], reason: "too large" });
+  });
+
+  it("content-length が上限を超えたら本文を読まず too large", async () => {
+    vi.stubGlobal("fetch", async () => new Response("<rss>", { status: 200, headers: { "content-length": "1048577" } }));
+    const result = await loadWriting({ url: "https://feed.test/rss.xml", reportPath: report() });
+    expect(result).toEqual({ items: [], reason: "too large" });
+  });
+
+  it("報告の書き込みに失敗しても例外を投げず結果を返す", async () => {
+    vi.stubGlobal("fetch", async () => new Response(FEED, { status: 200 }));
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const bad = join(tmpdir(), "wf-no-such-dir-xyz", "report.json");
+    const result = await loadWriting({ url: "https://feed.test/rss.xml", reportPath: bad });
+    expect(result.items).toHaveLength(3);
   });
 });
