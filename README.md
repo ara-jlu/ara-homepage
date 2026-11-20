@@ -1,29 +1,76 @@
 # ara-homepage
 
-joifup.com のサイト。アラという人のホームページで、やっていること（業務の自動化の事業・作ったもの）、書いたもの、自己紹介、問い合わせフォームを載せる。メモアプリの Joifup（将来は app.joifup.com）とは別物。
+[joifup.com](https://joifup.com) のソースです。joifup.com は、エンジニアのアラの個人のホームページで、やっていること、書いたもの、自己紹介、お仕事の相談のフォームを載せています。
+
+同じ名前のメモアプリ「Joifup」のサイトではありません。
 
 ## 作り
 
-- Astro の静的なサイトを、Cloudflare Workers の静的なアセットとして配る。動きと装飾は素の CSS と JavaScript
-- `/api/contact` だけを Worker（`worker/`）が受け、Turnstile で確かめてから Resend でメールを送る。内容は保存しない
-- 「最近書いたもの」はビルドのときに blog の `rss.xml` を読む（`src/lib/writing-feed.ts`）
-- `mock/index.html` — 決めた形のモック。本番の見た目の正解で、テストが突き合わせに使う
+- Astro で作った静的なサイトを、Cloudflare Workers の静的なアセットとして配っています。動きと装飾は素の CSS と TypeScript で書いています。
+- `/api/contact` だけを Worker が受け、Turnstile で確認してから Resend でメールを送ります。問い合わせの内容は保存しません。
+
+| 場所 | 中身 |
+| --- | --- |
+| `src/pages/` | ページ（トップと 404） |
+| `src/components/` | トップの各節 |
+| `src/layouts/` | 全ページに共通の `<head>` |
+| `src/styles/` | CSS |
+| `src/scripts/` | ブラウザで動くスクリプト（読み込みの演出、ヒーローの打鍵、問い合わせのフォームなど） |
+| `src/lib/writing-feed.ts` | 「最近書いたもの」の一覧をビルドのときに作る処理 |
+| `worker/` | `/api/contact` を受ける Worker |
+| `infra/` | Worker とカスタムドメインを作る Terraform |
+| `scripts/og.mjs` | OGP の画像（`public/og.png`）を作り直すスクリプト。`npm run og` で動きます |
+| `mock/index.html` | デザインの見本です。テストが、ビルドしたページの文言をこれと突き合わせます |
+| `test/` | テスト（Vitest と Playwright） |
+
+### 「最近書いたもの」の一覧
+
+ビルドのときに、別のリポジトリで管理しているブログのフィード <https://blog.joifup.com/rss.xml> を読んで作ります。フィードが取れないときは一覧を出さずに、ビルドはそのまま続けます。
 
 ## 手元で動かす
+
+Node.js 24 を使っています（`package.json` の `engines` は `>=20.11` です）。
 
 ```bash
 npm ci
 npx playwright install chromium
-npm test          # 型の検査は npm run typecheck
-npm run build && npm run preview   # wrangler dev。問い合わせを試すときは .dev.vars に TURNSTILE_SECRET_KEY と RESEND_API_KEY を書く
+npm test            # dist-test/ にビルドしてから、Playwright のブラウザでも確かめます
+npm run typecheck
 ```
 
-Turnstile は、手元では Cloudflare のテスト用の鍵（site key `1x00000000000000000000AA`）を `PUBLIC_TURNSTILE_SITE_KEY` に入れて試せる。
+ビルドして Worker ごと手元で動かすときは、`wrangler dev` を使います。
+
+```bash
+PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build
+npm run preview     # wrangler dev
+```
+
+`1x00000000000000000000AA` は、Cloudflare が公開している Turnstile のテスト用の site key です。問い合わせのフォームを試すときは、リポジトリの直下に `.dev.vars` を作り、次のように書きます（`.dev.vars` は `.gitignore` に入っています）。
+
+```
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+RESEND_API_KEY=...
+```
 
 ## デプロイ
 
-main への push と、手動の実行、blog のデプロイからの呼び出しで、GitHub Actions がデプロイする。repository variable `DEPLOY_ENABLED` が `true` のときだけ動く。Worker の入れ物とカスタムドメインは `infra/` の Terraform が持つ。
+GitHub Actions の `.github/workflows/deploy.yml` が、main への push か手動の実行で Cloudflare Workers にデプロイします。ブログのリポジトリのデプロイのワークフローも、記事を公開した後にこの手動の実行を起動します（「最近書いたもの」を新しくするためです）。
 
-デプロイの設定は次のように置く。
-- repository variable: `DEPLOY_ENABLED`。job の `if:` は environment に入る前に評価されるので、environment の variable は見えない。repository variable に置く。
-- `production` environment（デプロイできるブランチを main だけに限る）: secrets の `CLOUDFLARE_API_TOKEN`・`CLOUDFLARE_ACCOUNT_ID`・`DISCORD_WEBHOOK_URL` と、variable の `PUBLIC_TURNSTILE_SITE_KEY`。
+### 設定
+
+- repository variable `DEPLOY_ENABLED`: `true` のときだけデプロイが動きます。Worker と secrets の準備ができるまで、デプロイを止めておくためのものです。job の `if:` は environment に入る前に評価されるので、environment の variable では見えません。そのため repository variable に置いています。
+- `production` environment: Settings → Environments → Deployment branches で main だけに限ります。ここに次の値を置きます。
+  - secret `CLOUDFLARE_API_TOKEN`（Workers Scripts の編集の権限）
+  - secret `CLOUDFLARE_ACCOUNT_ID`
+  - secret `DISCORD_WEBHOOK_URL`（任意。空ならデプロイの通知を送りません）
+  - variable `PUBLIC_TURNSTILE_SITE_KEY`（公開される値です。空のときはデプロイが失敗します）
+- Worker が実行時に使う secrets の `TURNSTILE_SECRET_KEY` と `RESEND_API_KEY` は、CI からではなく `npx wrangler secret put` で設定します。
+
+### infra/
+
+`infra/terraform.tfvars.example` を `infra/terraform.tfvars` にコピーして値を入れます（`terraform.tfvars` はコミットしません）。Terraform は Worker を作り、`attach_custom_domain = true` のときは joifup.com のカスタムドメインも付けます。Terraform は、一時的な worktree ではなく、普段使っている checkout で動かしてください（state のファイルが checkout の中にできるためです）。
+
+## フォークして使うとき
+
+- `worker/contact.ts` の `TO`（問い合わせの宛先）と `FROM`（送信元）を変えてください。送信元のドメインは Resend で確認しておく必要があります。
+- ホスト名（`astro.config.mjs` の `site`、`src/layouts/Base.astro`、`infra/variables.tf`、`src/lib/writing-feed.ts` のフィードの URL など）を自分のものに変えてください。
