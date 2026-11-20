@@ -158,6 +158,12 @@ describe("JS が動くとき", () => {
     expect(await page.evaluate(() => document.documentElement.classList.contains("js"))).toBe(true);
   });
 
+  it("問い合わせの送信ボタンは、本体が動くと押せるようになる", async () => {
+    const page = await open();
+    await page.waitForFunction(() => document.documentElement.hasAttribute("data-ready"));
+    expect(await page.$eval('#contact-form button[type="submit"]', (el) => (el as HTMLButtonElement).disabled)).toBe(false);
+  });
+
   it("流れる帯は JS が中身を複製して流す", async () => {
     const page = await open();
     await page.waitForFunction(() => document.documentElement.hasAttribute("data-ready"));
