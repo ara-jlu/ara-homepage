@@ -48,6 +48,10 @@ describe("ページの骨格", () => {
     expect(read("dist-test/index.html")).not.toMatch(/\son[a-z]+\s*=/i);
   });
 
+  it("問い合わせの送信ボタンは、JS が使えるようにするまで押せない（JS が無いと静的なアセットへ POST されて内容が消えるため）", () => {
+    expect(built.querySelector('#contact-form button[type="submit"]')!.hasAttribute("disabled")).toBe(true);
+  });
+
   it("文言を CSS で隠す要素が無い", () => {
     expect(read("dist-test/index.html")).not.toMatch(/visually-hidden|sr-only/);
   });

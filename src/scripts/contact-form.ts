@@ -23,9 +23,15 @@ export function errorMessage(code: unknown): string {
 }
 
 // Turnstile のスクリプトは async で読むので、読み終わるまで待ってから描く。
-function whenTurnstile(): Promise<Turnstile> {
+// 読み込みが止められた（広告ブロックなど）ときに見張りを回し続けないよう、limitMs で諦めて null を返す。
+export function whenTurnstile(limitMs = 30_000): Promise<Turnstile | null> {
   return new Promise((resolve) => {
-    const tick = () => (window.turnstile ? resolve(window.turnstile) : setTimeout(tick, 100));
+    const t0 = Date.now();
+    const tick = () => {
+      if (window.turnstile) resolve(window.turnstile);
+      else if (Date.now() - t0 >= limitMs) resolve(null);
+      else setTimeout(tick, 100);
+    };
     tick();
   });
 }
@@ -34,12 +40,17 @@ export function initContactForm(): void {
   const form = document.getElementById("contact-form") as HTMLFormElement | null;
   const box = document.getElementById("turnstile");
   const errorEl = document.getElementById("contact-error");
-  if (!form || !box || !errorEl) return;
-  const button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+  const button = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+  if (!form || !box || !errorEl || !button) return;
   const sitekey = box.dataset.sitekey ?? "";
   let widget: string | null = null;
   let ts: Turnstile | null = null;
-  if (sitekey) void whenTurnstile().then((t) => { ts = t; widget = t.render(box, { sitekey, theme: "dark" }); });
+  if (sitekey)
+    void whenTurnstile().then((t) => {
+      if (!t) return;
+      ts = t;
+      widget = t.render(box, { sitekey, theme: "dark" });
+    });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -74,4 +85,6 @@ export function initContactForm(): void {
       if (!form.classList.contains("sent") && ts && widget !== null) ts.reset(widget);
     }
   });
+  // HTML では押せない状態で出している（JS が無いと、内容が静的なアセットへ POST されて消えるため）。送る準備ができたここで押せるようにする。
+  button.disabled = false;
 }
