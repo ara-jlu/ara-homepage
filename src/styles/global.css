@@ -355,6 +355,8 @@ footer{position:relative;font-family:var(--mono);font-size:12px;color:var(--crea
 /* ---------- 送信の失敗の文言 ---------- */
 .cform .err{color:var(--amber-2);font-size:13px;margin-top:14px}
 .cform .err:empty{display:none}
+/* 準備が整うまで無効の送信ボタン */
+.cform button[disabled]{opacity:.5;cursor:not-allowed}
 #turnstile{margin-top:18px;min-height:65px}
 #turnstile:empty{display:none}
 

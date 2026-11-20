@@ -14,9 +14,10 @@ import { reduce, sleep } from "./util";
 // js-flag.js が4秒で js のクラスを外した後に本体が届いたとき（回線が遅いなど）は、CSS が静的な表示（WORKS を縦に積む・ヒーローは打ち終わった形）に切り替え済み。
 // そこへ高さの指定や打ち直しを足すと崩れるので、配置に触れない処理だけを動かす。
 const live = document.documentElement.classList.contains("js");
+// 問い合わせフォームを先に初期化する（下の処理が失敗しても、送信ボタンが無効のまま残らないようにするため）。
+initContactForm();
 marquee();
 clock();
-initContactForm();
 if (live) start();
 // 本体が起動したことを js-flag.js に知らせる（無いと 4 秒後に静的な表示へ戻される）。
 document.documentElement.setAttribute("data-ready", "");
