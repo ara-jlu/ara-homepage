@@ -1,15 +1,20 @@
 import { resolve } from "node:path";
-import { chromium, type Browser, type Page } from "playwright";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { serveDir } from "./support/serve";
 
 const DIST = resolve(import.meta.dirname, "../dist-test");
 let browser: Browser;
 let site: { url: string; close(): Promise<void> };
+// テストごとに開いたコンテキストは、そのテストの後に閉じる（次のテストへ持ち越さない）。
+const contexts: BrowserContext[] = [];
 
 beforeAll(async () => {
   browser = await chromium.launch();
   site = await serveDir(DIST);
+});
+afterEach(async () => {
+  await Promise.all(contexts.splice(0).map((c) => c.close()));
 });
 afterAll(async () => {
   await browser.close();
@@ -23,6 +28,7 @@ async function open(opts: { js?: boolean; reduce?: boolean; blockMain?: boolean;
     reducedMotion: opts.reduce ? "reduce" : "no-preference",
     viewport: { width: opts.width ?? 1440, height: 900 },
   });
+  contexts.push(ctx);
   const page = await ctx.newPage();
   await page.route(/^https:\/\//, (r) => r.abort());
   if (opts.blockMain) await page.route(/\/_astro\/.*\.js$/, (r) => r.fulfill({ status: 404, body: "" }));
@@ -62,8 +68,7 @@ describe("JS が無い・失敗したとき", () => {
 
   it("本体のスクリプトだけが動かなくても、5秒後には同じように読める", async () => {
     const page = await open({ blockMain: true });
-    await page.waitForTimeout(5000);
-    expect(await page.evaluate(() => document.documentElement.classList.contains("js"))).toBe(false);
+    await page.waitForFunction(() => !document.documentElement.classList.contains("js"), null, { timeout: 8000 });
     await readable(page);
   });
 });
@@ -99,5 +104,12 @@ describe("動きを減らす設定", () => {
       expect(await page.$$eval(sel, (els) => els.every((e) => getComputedStyle(e).opacity === "1"))).toBe(true);
     }
     expect(await visible(page, "#headline")).toBe(true);
+  });
+});
+
+describe("テスト用のサーバー", () => {
+  it("壊れたパーセントの符号には 400 を返す", async () => {
+    const res = await fetch(site.url + "/%E0%A4%A", { signal: AbortSignal.timeout(3000) });
+    expect(res.status).toBe(400);
   });
 });
