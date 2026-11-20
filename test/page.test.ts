@@ -126,6 +126,10 @@ describe("モックとの突き合わせ", () => {
     for (const s of ["ara — engineer / AI", "事務作業を仕組みで減らす事業", "人生を楽しみ、<em>一歩上へ</em>。", "En<b>jo</b>y L<b>if</b>e, One Step <b>Up</b>."]) expect(mockSrc).toContain(s);
   });
 
+  it("ヒーローの ls の出力が改行つきのまま出力にある（compressHTML: false の番人）", () => {
+    expect(read("dist-test/index.html")).toContain('事務作業を仕組みで減らす事業\n<span class="hl">joifup/</span>');
+  });
+
   it("流れる帯の文言がモックの配列と同じで、静的にある", () => {
     const a = ["AUTOMATION", "DEVELOPMENT", "WRITING", "ENJOY LIFE, ONE STEP UP"];
     const b = ["TypeScript", "Python", "PHP", "Java", "Next.js", "Laravel", "PostgreSQL", "Google Cloud", "Cloudflare", "Terraform", "Docker", "n8n"];
