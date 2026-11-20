@@ -1,0 +1,27 @@
+{
+  "name": "ara-homepage",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "wrangler dev",
+    "test": "vitest run",
+    "typecheck": "astro check",
+    "deploy": "wrangler deploy",
+    "og": "node scripts/og.mjs"
+  },
+  "dependencies": {
+    "astro": "^7.4.13",
+    "fast-xml-parser": "^5.12.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@types/node": "^24.19.2",
+    "node-html-parser": "^7.1.0",
+    "playwright": "^1.65.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.12",
+    "wrangler": "^4.165.0"
+  }
+}

@@ -6,3 +6,14 @@ node_modules/
 dist/
 .env*
 .dev.vars
+
+dist-test/
+dist-test-nofeed/
+writing-report*.json
+.wrangler/
+infra/.terraform/
+infra/.terraform.lock.hcl
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+**/terraform.tfvars
+test-results/

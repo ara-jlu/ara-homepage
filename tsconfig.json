@@ -1,0 +1,7 @@
+{
+  // TypeScript は ^6 に固定している。@astrojs/check 0.9 は TypeScript 7 のネイティブのコンパイラで動かないため。対応したら ^7 に上げる。
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": { "resolveJsonModule": true },
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist", "dist-test", "dist-test-nofeed", "mock"]
+}
