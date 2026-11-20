@@ -1,3 +1,12 @@
 ---
+import Base from "../layouts/Base.astro";
 ---
-<html lang="ja"><head><meta charset="utf-8"><title>ページが見つかりません | joifup.com</title></head><body><p>404</p></body></html>
+<Base title="ページが見つかりません | joifup.com" path="/404">
+  <section class="contact" data-theme="dark" style="min-height:100svh;display:grid;place-items:center">
+    <div class="inner">
+      <span class="mono" style="color:var(--cream-2);font-size:13px"><span style="color:var(--green)">$</span> cat ./404</span>
+      <h2 style="margin:18px 0 28px">ページが見つかりません。</h2>
+      <a class="btn" href="/"><span>トップへ戻る →</span></a>
+    </div>
+  </section>
+</Base>

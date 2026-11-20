@@ -1,0 +1,29 @@
+---
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
+---
+<section class="contact" id="contact" data-theme="dark">
+  <canvas id="field2" aria-hidden="true"></canvas>
+  <div class="inner reveal">
+    <span class="mono" style="color:var(--cream-2);font-size:13px"><span style="color:var(--green)">$</span> contact --ara</span>
+    <h2 style="margin-bottom:36px"><span class="mask"><span>お仕事の相談を、<em>受け付けています</em>。</span></span></h2>
+    <form class="cform" id="contact-form" method="post">
+      <div class="f2">
+        <label><span>お名前</span><input required name="name" autocomplete="name" maxlength="100"></label>
+        <label><span>メールアドレス</span><input required type="email" name="email" autocomplete="email" maxlength="254"></label>
+      </div>
+      <fieldset class="kind"><legend>ご相談の種類</legend>
+        <label><input type="radio" name="kind" value="automation" checked><span>業務の自動化のご相談</span></label>
+        <label><input type="radio" name="kind" value="development"><span>開発のご依頼</span></label>
+        <label><input type="radio" name="kind" value="other"><span>その他</span></label>
+      </fieldset>
+      <label><span>内容</span><textarea required name="message" rows="5" maxlength="4000" placeholder="稼働の条件や、困っている作業などをご記入ください"></textarea></label>
+      <div id="turnstile" data-sitekey={siteKey}></div>
+      <div class="fend">
+        <button class="btn magnet" type="submit" data-hot><span>送信する →</span></button>
+        <span class="alt mono">X の <a href="https://x.com/ara_jlu" target="_blank" rel="noopener" data-hot>DM</a> でも受け付けています</span>
+      </div>
+      <p class="err mono" id="contact-error" role="alert"></p>
+      <p class="done mono">$ sent ✓ — 送信しました。返信までしばらくお待ちください</p>
+    </form>
+  </div>
+</section>
