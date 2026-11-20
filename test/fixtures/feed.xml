@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>Joifup Blog</title><link>https://blog.joifup.com</link><description>test</description>
+<item><title>古い記事</title><link>https://blog.joifup.com/old</link><pubDate>Tue, 03 Nov 2026 00:00:00 +0900</pubDate></item>
+<item><title><![CDATA[CDATA の記事 & 記号]]></title><link>https://blog.joifup.com/cdata</link><pubDate>Sun, 15 Nov 2026 00:00:00 +0900</pubDate></item>
+<item><title>Q&amp;A の記事</title><link>https://blog.joifup.com/qa</link><pubDate>Tue, 17 Nov 2026 00:00:00 +0900</pubDate></item>
+<item><title>外の記事</title><link>https://evil.example/x</link><pubDate>Fri, 20 Nov 2026 00:00:00 +0900</pubDate></item>
+<item><title>真ん中の記事</title><link>https://blog.joifup.com/mid</link><pubDate>Tue, 10 Nov 2026 00:00:00 +0900</pubDate></item>
+</channel></rss>
