@@ -52,6 +52,8 @@ TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 RESEND_API_KEY=...
 ```
 
+このテスト用の secret key は、ローカルの `.dev.vars` だけで使うものです。本番では、Turnstile のダッシュボードにある本物の secret key を `npx wrangler secret put TURNSTILE_SECRET_KEY` で設定してください。
+
 ## デプロイ
 
 GitHub Actions の `.github/workflows/deploy.yml` が、main への push か手動の実行で Cloudflare Workers にデプロイします。ブログのリポジトリのデプロイのワークフローも、記事を公開した後にこの手動の実行を起動します（「最近書いたもの」を新しくするためです）。
@@ -74,3 +76,4 @@ GitHub Actions の `.github/workflows/deploy.yml` が、main への push か手�
 
 - `worker/contact.ts` の `TO`（問い合わせの宛先）と `FROM`（送信元）を変えてください。送信元のドメインは Resend で確認しておく必要があります。
 - ホスト名（`astro.config.mjs` の `site`、`src/layouts/Base.astro`、`infra/variables.tf`、`src/lib/writing-feed.ts` のフィードの URL など）を自分のものに変えてください。
+- `infra/variables.tf` は、検証（validation）で `site_hostname` に `joifup.com` しか受け付けません。フォークするときは、この検証も書き換えてください。
