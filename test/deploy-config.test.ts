@@ -23,7 +23,8 @@ describe("wrangler の設定", () => {
   it("workers.dev とプレビューの URL を閉じる（正規のホストを joifup.com の1つにする）", () => {
     expect(wrangler).toContain('"workers_dev": false');
     expect(wrangler).toContain('"preview_urls": false');
-    expect(mainTf).toMatch(/enabled\s*=\s*false/);
+    const subdomain = mainTf.match(/subdomain\s*=\s*\{([\s\S]*?)\}/)?.[1] ?? "";
+    expect(subdomain).toMatch(/^\s*enabled\s*=\s*false/m);
     expect(mainTf).toMatch(/previews_enabled\s*=\s*false/);
   });
 
