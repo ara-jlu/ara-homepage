@@ -5,7 +5,7 @@ import { reduce, sleep } from "./util";
 
 type Step = { t: "cmd" | "out" | "big"; s: string } | { t: "motto" };
 
-// モックの 610〜618 行目の台本と同じ文言（Hero.astro の静的な中身とも同じ）。
+// モックのスクリプトの script の配列（打鍵の台本）と同じ文言（Hero.astro の静的な中身とも同じ）。
 const script: Step[] = [
   { t: "cmd", s: "whoami" },
   { t: "out", s: "ara — engineer / AI" },
@@ -40,12 +40,20 @@ async function typeLine(el: Element, text: string, speed: number): Promise<void>
 
 const PROMPT = '<span class="p">ara@joifup</span>:<span class="hl">~</span>$ ';
 
-export async function runTerm(): Promise<void> {
+// 打ち直す前の片付け。窓が開く前（読み込みの幕と透明な窓の裏にあるうち）に同期で呼び、静的な行が窓の中に見えないようにする。
+export function prepareTerm(): void {
   if (reduce) return;
   const screenEl = document.getElementById("screen")!;
   const headline = document.getElementById("headline")!;
   for (const child of [...screenEl.children]) if (child !== headline) child.remove();
   headline.style.opacity = "0";
+}
+
+// prepareTerm で空にした窓に、台本どおりに打ち込む。
+export async function runTerm(): Promise<void> {
+  if (reduce) return;
+  const screenEl = document.getElementById("screen")!;
+  const headline = document.getElementById("headline")!;
   let after = false; // 見出しより後の行は h1 の後ろに足す
   const place = (ln: HTMLElement) => (after ? screenEl.appendChild(ln) : screenEl.insertBefore(ln, headline));
   try {
