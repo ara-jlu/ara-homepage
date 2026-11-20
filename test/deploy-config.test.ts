@@ -49,6 +49,13 @@ describe("デプロイのワークフロー", () => {
     expect(deploy).toMatch(/^\s+environment:\s*production\s*$/m);
   });
 
+  it("本番のビルドは Turnstile の site key が空なら落ちる（フォームが送れないまま出さない）", () => {
+    const build = deploy.match(/- name: Build\n([\s\S]*?)\n\n/)?.[1] ?? "";
+    expect(build).toContain("shell: bash");
+    expect(build).toContain('test -n "$PUBLIC_TURNSTILE_SITE_KEY" || { echo "::error::PUBLIC_TURNSTILE_SITE_KEY is empty"; exit 1; }');
+    expect(build.indexOf("test -n")).toBeLessThan(build.indexOf("npm run build"));
+  });
+
   it("成功の通知は報告のファイルが無くても落ちず、メンションを飛ばさない", () => {
     expect(deploy).toContain("allowed_mentions");
     expect(deploy).toMatch(/\.count \/\/ 0/);
