@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+JP:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{width:1200px;height:630px;position:relative;overflow:hidden;font-family:"Noto Sans JP",sans-serif;background:#1A1814}
+  canvas{position:absolute;inset:0}
+  .window{position:absolute;left:160px;top:160px;width:880px;background:linear-gradient(160deg,rgba(239,231,216,.08),rgba(239,231,216,.015) 45%),rgba(26,24,20,.82);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);border:1px solid rgba(239,231,216,.16);border-radius:16px;box-shadow:0 50px 140px rgba(0,0,0,.6),0 0 0 1px rgba(239,231,216,.05) inset,0 0 80px rgba(199,144,56,.08);overflow:hidden}
+  .window-bar{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid rgba(239,231,216,.10);background:rgba(239,231,216,.04);font-family:"JetBrains Mono",monospace;font-size:14px;color:#ADA392}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .window-bar .t{margin-left:auto;margin-right:auto;transform:translateX(-24px)}
+  .screen{padding:34px 44px 44px;font-family:"JetBrains Mono",monospace;line-height:1.7}
+  .p{color:#5F9B6E;font-size:20px} .cmd{color:#EFE7D8}
+  .motto{font-size:28px;color:#ADA392;margin-top:10px;letter-spacing:.03em}
+  .motto b{color:#C79038;font-weight:700}
+  h1{font-family:"Noto Sans JP",sans-serif;font-weight:900;font-size:68px;line-height:1.3;margin-top:22px;color:#EFE7D8;white-space:nowrap}
+  h1 em{font-style:normal;color:#C79038}
+  .logo{position:absolute;left:64px;top:44px;display:flex;align-items:center;gap:24px;font-family:"JetBrains Mono",monospace;font-weight:700;font-size:40px;letter-spacing:.04em;color:#EFE7D8}
+  .logo svg{width:84px;height:52px}
+  .logo b{color:#C79038}
+</style>
+</head>
+<body>
+  <canvas id="c" width="1200" height="630"></canvas>
+  <div class="window">
+    <div class="window-bar"><span class="dot" style="background:#B4553F"></span><span class="dot" style="background:#C79038"></span><span class="dot" style="background:#5F9B6E"></span><span class="t">ara@joifup: ~</span></div>
+    <div class="screen">
+      <p class="p">ara@joifup:~$ <span class="cmd">echo $MOTTO</span></p>
+      <p class="motto">En<b>jo</b>y L<b>if</b>e, One Step <b>Up</b>.</p>
+      <h1>人生を楽しみ、<em>一歩上へ</em>。</h1>
+    </div>
+  </div>
+  <div class="logo"><svg viewBox="0 0 42 26" aria-hidden="true"><rect x="0" y="20" width="18" height="4" rx="2" fill="#EFE7D8" opacity=".35"/><rect x="12" y="12" width="18" height="4" rx="2" fill="#EFE7D8" opacity=".65"/><rect x="24" y="4" width="18" height="4" rx="2" fill="#EFE7D8"/></svg><span>joifup<b>.</b>com</span></div>
+<script>
+// 静的に描く。乱数は固定の種で、撮るたびに同じ絵になる。canvas は書体の読み込み後に描く
+let s=7;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;
+const x=document.getElementById("c").getContext("2d");
+// 奥行きのあるアンバーの床（makeGrid の静止版）
+const hz=330;
+const g=x.createLinearGradient(0,hz,0,630);g.addColorStop(0,"rgba(199,144,56,0)");g.addColorStop(1,"rgba(199,144,56,.34)");
+x.strokeStyle=g;x.lineWidth=1;
+for(let i=-24;i<=24;i++){x.beginPath();x.moveTo(600+i*30,hz);x.lineTo(600+i*190,630);x.stroke();}
+for(let k=1;k<=12;k++){const t=Math.pow(k/12,2.2),y=hz+t*(630-hz);x.beginPath();x.moveTo(0,y);x.lineTo(1200,y);x.strokeStyle="rgba(199,144,56,"+(.05+t*.3)+")";x.stroke();}
+// 薄い文字の場（makeField の静止版）。床の上に重ねる。t=0 で固定し、位相は固定の種の乱数
+document.fonts.load('12px "JetBrains Mono"').then(()=>{
+  const S=22,glyphs="01{}[]<>/$#*+=-_.:;".split("");
+  x.font='12px "JetBrains Mono", monospace';x.textAlign="center";x.textBaseline="middle";
+  for(let cy=0;cy<Math.ceil(630/S);cy++)for(let cx=0;cx<Math.ceil(1200/S);cx++){
+    const g=glyphs[(rnd()*glyphs.length)|0],p=rnd()*6.28;
+    const wave=(Math.sin(cx*.35+p*.2)+Math.cos(cy*.3))*.5;
+    x.fillStyle="rgba(239,231,216,"+(.04+Math.max(0,wave)*.11)+")";
+    x.fillText(g,cx*S+S/2,cy*S+S/2);
+  }
+});
+</script>
+</body>
+</html>
