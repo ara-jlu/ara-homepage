@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parse, type HTMLElement } from "node-html-parser";
 import { describe, expect, it } from "vitest";
@@ -34,8 +34,7 @@ function texts(root: HTMLElement, skip: (el: HTMLElement) => boolean): string[] 
 
 describe("ビルドの CSS", () => {
   // すりガラスの見た目は backdrop-filter で作っている。Chromium は接頭辞の無い方しか読まないので、圧縮で落ちると透けすぎる。
-  it("接頭辞の無い backdrop-filter がモックと同じ数だけ残る", async () => {
-    const { readdirSync } = await import("node:fs");
+  it("接頭辞の無い backdrop-filter がモックと同じ数だけ残る", () => {
     const css = readdirSync(resolve(ROOT, "dist-test/_astro"))
       .filter((f) => f.endsWith(".css"))
       .map((f) => read(`dist-test/_astro/${f}`))
