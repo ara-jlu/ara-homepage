@@ -77,3 +77,13 @@ GitHub Actions の `.github/workflows/deploy.yml` が、main への push か手�
 - `worker/contact.ts` の `TO`（問い合わせの宛先）と `FROM`（送信元）を変えてください。送信元のドメインは Resend で確認しておく必要があります。
 - ホスト名（`astro.config.mjs` の `site`、`src/layouts/Base.astro`、`infra/variables.tf`、`src/lib/writing-feed.ts` のフィードの URL など）を自分のものに変えてください。
 - `infra/variables.tf` は、検証（validation）で `site_hostname` に `joifup.com` しか受け付けません。フォークするときは、この検証も書き換えてください。
+- 下の「ライセンス」のとおり、文章と画像は使えません。自分のものに差し替えてください。
+
+## ライセンス
+
+コードは MIT ライセンスです（[LICENSE](LICENSE)）。
+
+ただし、次のものは MIT ライセンスの対象外です。著作権はアラに残り、転載や利用はできません。
+
+- 文章: ページ（`src/`）とモック（`mock/index.html`）に書かれた文言、自己紹介、OGP の画像の文言
+- 画像: アイコン（`public/img/avatar.png`、`mock/img/avatar.png`）、サイトのスクリーンショット（`public/img/*.webp`、`mock/img/*.webp`）、OGP の画像（`public/og.png`）
