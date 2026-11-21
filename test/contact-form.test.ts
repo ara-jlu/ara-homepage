@@ -30,6 +30,23 @@ describe("Turnstile の読み込みを待つ", () => {
     await expect(p).resolves.toBe(ts);
   });
 
+  it("render の無い途中の turnstile では返さず、本体が読み込まれて render ができてから返す", async () => {
+    vi.useFakeTimers();
+    const w: { turnstile?: unknown } = {};
+    vi.stubGlobal("window", w);
+    const p = whenTurnstile();
+    let settled = false;
+    void p.then(() => (settled = true));
+    // ローダーが先に置く、render を持たない仮の turnstile
+    w.turnstile = {};
+    await vi.advanceTimersByTimeAsync(300);
+    expect(settled).toBe(false);
+    const ts = { render: vi.fn() };
+    w.turnstile = ts;
+    await vi.advanceTimersByTimeAsync(200);
+    await expect(p).resolves.toBe(ts);
+  });
+
   it("30秒たっても読み込まれなければ、待つのをやめて null を返す", async () => {
     vi.useFakeTimers();
     vi.stubGlobal("window", {});

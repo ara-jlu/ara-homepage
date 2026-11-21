@@ -23,12 +23,13 @@ export function errorMessage(code: unknown): string {
 }
 
 // Turnstile のスクリプトは async で読むので、読み終わるまで待ってから描く。
+// 最初に読むローダーは render の無い仮の window.turnstile を先に置き、本体はその後で読み込まれる。存在だけを見ると render の前に呼んで落ちるので、render が関数になるまで待つ。
 // 読み込みが止められた（広告ブロックなど）ときに見張りを回し続けないよう、limitMs で諦めて null を返す。
 export function whenTurnstile(limitMs = 30_000): Promise<Turnstile | null> {
   return new Promise((resolve) => {
     const t0 = Date.now();
     const tick = () => {
-      if (window.turnstile) resolve(window.turnstile);
+      if (typeof window.turnstile?.render === "function") resolve(window.turnstile);
       else if (Date.now() - t0 >= limitMs) resolve(null);
       else setTimeout(tick, 100);
     };
