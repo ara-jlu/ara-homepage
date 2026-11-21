@@ -2,8 +2,6 @@
 
 [joifup.com](https://joifup.com) のソースです。joifup.com は、私の個人のホームページで、やっていること、書いたもの、自己紹介、お仕事の相談のフォームを載せています。
 
-同じ名前のメモアプリ「Joifup」のサイトではありません。
-
 ## 作り
 
 - Astro で作った静的なサイトを、Cloudflare Workers の静的なアセットとして配っています。動きと装飾は素の CSS と TypeScript で書いています。
