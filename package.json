@@ -28,5 +28,5 @@
     "vitest": "^4.1.12",
     "wrangler": "^4.165.0"
   },
-  "license": "SEE LICENSE IN LICENSE"
+  "license": "MIT"
 }

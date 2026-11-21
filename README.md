@@ -83,7 +83,4 @@ GitHub Actions の `.github/workflows/deploy.yml` が、main への push か手�
 
 コードは MIT ライセンスです（[LICENSE](LICENSE)）。
 
-ただし、次のものは MIT ライセンスの対象外です。著作権はアラに残り、転載や利用はできません。
-
-- 文章: ページ（`src/`）とモック（`mock/index.html`）に書かれた文言、自己紹介、OGP の画像の文言
-- 画像: アイコン（`public/img/avatar.png`、`mock/img/avatar.png`）、サイトのスクリーンショット（`public/img/*.webp`、`mock/img/*.webp`）、OGP の画像（`public/og.png`）
+ただし、サイトの文章（文言・自己紹介・OGP の画像の文言）と画像（アイコン・3段の印・スクリーンショット・OGP の画像）は MIT ライセンスの対象外です。著作権はアラに残り、許可なく複製・転載・利用はできません。対象のファイルは [CONTENT-LICENSE.md](CONTENT-LICENSE.md) に挙げています。
