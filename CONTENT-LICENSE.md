@@ -1,6 +1,6 @@
 # 文章と画像の扱い
 
-このリポジトリのコードは MIT ライセンスです（[LICENSE](LICENSE)）。ただし、次の文章と画像は MIT ライセンスの対象外です。著作権はアラ（Ara）に残り、許可なく複製・転載・利用はできません。
+このリポジトリのコードは MIT ライセンスです（[LICENSE](LICENSE)）。ただし、次の文章と画像は MIT ライセンスの対象外です。著作権は作者に残り、許可なく複製・転載・利用はできません。
 
 ## 文章
 
@@ -21,7 +21,7 @@
 
 ## Content license (English)
 
-The source code in this repository is licensed under the MIT License (see [LICENSE](LICENSE)). The following content is not covered by it; all rights are reserved by Ara, and it may not be copied, republished or reused without permission:
+The source code in this repository is licensed under the MIT License (see [LICENSE](LICENSE)). The following content is not covered by it; all rights are reserved by the author, and it may not be copied, republished or reused without permission:
 
 - Text: the copy on the site and in the mock (`src/` components, layouts and pages, `mock/index.html`), the text in the OGP image (`scripts/og/og.html`), and that copy where it is reproduced in tests. The non-text code in those files (markup structure, CSS, scripts) remains under the MIT License.
 - Images: the avatar (`public/img/avatar.png`, `mock/img/avatar.png`), the three-step logo mark (`public/favicon.svg` and the same shape drawn in the site and the mock; the mark may not be used even where its SVG markup sits in code), the site screenshots (`public/img/*.webp`, `mock/img/*.webp`), and the OGP image (`public/og.png`).
