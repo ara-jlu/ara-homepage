@@ -16,7 +16,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
         <label><input type="radio" name="kind" value="development"><span>開発のご依頼</span></label>
         <label><input type="radio" name="kind" value="other"><span>その他</span></label>
       </fieldset>
-      <label><span>内容</span><textarea required name="message" rows="5" maxlength="4000" placeholder="稼働の条件や、困っている作業などをご記入ください"></textarea></label>
+      <label><span>内容</span><textarea required name="message" rows="5" maxlength="4000" placeholder="ご相談・ご依頼の内容や、困っている作業などをご記入ください"></textarea></label>
       <div id="turnstile" data-sitekey={siteKey}></div>
       <div class="fend">
         <button class="btn magnet" type="submit" data-hot disabled><span>送信する →</span></button>
