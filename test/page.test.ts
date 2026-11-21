@@ -32,6 +32,20 @@ function texts(root: HTMLElement, skip: (el: HTMLElement) => boolean): string[] 
   return out;
 }
 
+describe("ビルドの CSS", () => {
+  // すりガラスの見た目は backdrop-filter で作っている。Chromium は接頭辞の無い方しか読まないので、圧縮で落ちると透けすぎる。
+  it("接頭辞の無い backdrop-filter がモックと同じ数だけ残る", async () => {
+    const { readdirSync } = await import("node:fs");
+    const css = readdirSync(resolve(ROOT, "dist-test/_astro"))
+      .filter((f) => f.endsWith(".css"))
+      .map((f) => read(`dist-test/_astro/${f}`))
+      .join("\n");
+    const inMock = (mockSrc.match(/[;{\s]backdrop-filter:/g) ?? []).length;
+    expect(inMock).toBeGreaterThan(0);
+    expect((css.match(/[;{]backdrop-filter:/g) ?? []).length).toBe(inMock);
+  });
+});
+
 describe("ページの骨格", () => {
   it("全部の節がある", () => {
     for (const id of ["top", "works", "writing", "about", "contact"]) expect(built.querySelector(`#${id}`)).not.toBeNull();

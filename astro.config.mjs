@@ -9,4 +9,7 @@ export default defineConfig({
   compressHTML: false,
   build: { format: "file" },
   outDir: process.env.ASTRO_OUT_DIR ?? "./dist",
+  // 既定の CSS の圧縮（Lightning CSS）は、backdrop-filter と -webkit-backdrop-filter が並ぶと -webkit- の方だけを残す。
+  // Chromium は接頭辞の無い方しか読まないので、すりガラスのぼかしが消えて透けすぎる。esbuild の圧縮は両方を残す。
+  vite: { build: { cssMinify: "esbuild" } },
 });
