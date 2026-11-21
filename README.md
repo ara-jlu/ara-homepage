@@ -1,6 +1,6 @@
 # ara-homepage
 
-[joifup.com](https://joifup.com) のソースです。joifup.com は、エンジニアのアラの個人のホームページで、やっていること、書いたもの、自己紹介、お仕事の相談のフォームを載せています。
+[joifup.com](https://joifup.com) のソースです。joifup.com は、私の個人のホームページで、やっていること、書いたもの、自己紹介、お仕事の相談のフォームを載せています。
 
 同じ名前のメモアプリ「Joifup」のサイトではありません。
 
